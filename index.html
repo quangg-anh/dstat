@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.3.0/css/all.min.css">
+
+    <title>Layer7 - DSTAT</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background-color: #191919;
+      }
+
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      body > div {
+        width: 100%;
+      }
+
+      #chart {
+        width: 100%;
+        margin: auto;
+      }
+
+      #info {
+        margin-top: 2em;
+        text-align: center;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      #chart-container {
+        width: 80%;
+        margin: 2em auto;
+        padding: 1em;
+        background-color: #212121; 
+        border-top: 3px solid #FFFFFF; 
+        border-radius: 3px; 
+
+      }
+
+      #container-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+      }
+
+      #top-container {
+          display: flex;
+          width: 80%; 
+          justify-content: space-between;
+          margin-bottom: 20px; 
+      }
+
+      .side-container span, #middle-container span {
+          position: absolute;
+          bottom: 17px; 
+          width: 100%;
+          text-align: center;
+          font-weight: bold; 
+          color: #FFFFFF; 
+          font-size: 20px;
+          font-family: sans-serif;
+      }
+
+       #middle-container {
+          position: relative; 
+          width: calc((100% - 100px) / 3);
+          background-color: #212121;
+          height: 115px;
+          display: flex;
+          align-items: flex-end; 
+          justify-content: center;
+      }
+      .side-container {
+          position: relative;
+          width: calc((100% - 160px) / 3);
+          background-color: #212121;
+          height: 115px;
+          display: flex;
+          align-items: center; 
+          justify-content: flex-start; 
+          border-left: 3px solid #FFFFFF;
+      }
+
+      .side-container i {
+          color: #FFFFFF; 
+          margin-left: 28px; 
+          margin-right: 5px; 
+          font-size: 38px; 
+          position: relative; 
+          top: -15px; 
+      }
+
+      .side-container .data {
+        font-size: 26px; 
+        color: #FFFFFF; 
+        font-family: sans-serif; 
+        font-weight: bold; 
+        position: absolute; 
+        right: 24px; 
+        top: 28px; 
+        white-space: nowrap;
+        text-align: right;
+
+      }
+
+  </style>
+  </head>
+
+  <body>
+    <div>
+      <h2 id="info"></h2>
+      <div id="container-wrapper">
+        <div id="top-container">
+          <div class="side-container" id="left-container">
+            <i class="fas fa-chart-area"></i>
+            <span class="data" id="avg-data">Loading...</span>
+            <span>Average Requests</span>
+          </div>
+
+          <div class="side-container" id="center-container">
+            <i class="fas fa-chart-line"></i>
+            <span class="data" id="peak-data">Loading...</span>
+            <span>Peak Requests</span>
+          </div>
+
+          <div class="side-container" id="right-container">
+            <i class="fa-solid fa-dice-d20"></i>
+            <span class="data" id="total-data">Loading...</span>
+            <span>Overall Requests</span>
+          </div>
+        </div>
+
+        <div id="chart-container">
+          <div id="chart"></div>
+        </div>
+      </div>
+
+    </div>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script>
+      window.onload = () => {
+        let info = document.getElementById("info");
+        const queryParams = new URLSearchParams(window.location.search);
+        const dataString = queryParams.get('data');
+        const user = queryParams.get('user'); 
+        let data = [];
+        if (dataString) {
+          try {
+            data = JSON.parse(dataString);
+          } catch(e) {
+            console.error('Error parsing data query to array', e);
+          }
+        }
+
+        const totalRequests = data.reduce((acc, curr) => acc + curr, 0);
+        const peakRequests = Math.max(...data);
+        const averageRequests = (totalRequests / data.length) || 0; 
+
+        function formatNumber(num) {
+            if (num < 1000) {
+                return num; 
+            }
+            let suffixes = ["", "k", "M", "B"];
+            let suffixIndex = 0;
+            while (num >= 1000 && suffixIndex < suffixes.length - 1) {
+                suffixIndex++;
+                num /= 1000;
+            }
+            return num.toFixed(2).replace(/\.00$/, '') + suffixes[suffixIndex];
+        }
+
+        document.getElementById('left-container').querySelector('.data').textContent = formatNumber(Math.round(averageRequests));
+        document.getElementById('center-container').querySelector('.data').textContent = formatNumber(peakRequests);
+        document.getElementById('right-container').querySelector('.data').textContent = formatNumber(totalRequests);
+
+        let chart = Highcharts.chart('chart', {
+          exporting: {
+            enabled: false,
+          },
+          chart: {
+            type: 'area',
+            backgroundColor: '#212121',
+            animation: false,
+            events: {
+              load: function() {
+
+                var chart = this;
+                var width = chart.chartWidth;
+                var height = chart.chartHeight;
+
+                chart.renderer.text('@cyber_hubBot', 240, 360)
+                  .attr({
+                    zIndex: 5,
+                    rotation: -38  
+                  })
+                  .css({
+                    color: '#FFFFFF',
+                    fontSize: '60px', 
+                    opacity: 0.4  
+                  })
+                  .add();
+              }
+            }
+
+          },
+          title: {
+            text: 'CyberHub Graph With Love <3',
+            style: {
+              color: '#FFFFFF', 
+            }
+          },
+          xAxis: {
+            labels: {
+              style: {
+                color: '#FFFFFF',
+              },
+            },
+            gridLineWidth: 1,  
+            gridLineColor: '#444' 
+          },
+          yAxis: {
+            title: {
+              text: '',
+            },
+            labels: {
+              style: {
+                color: '#FFFFFF', 
+              }
+            },
+            gridLineWidth: 1,  
+            gridLineColor: '#444' 
+          },
+          series: [{
+            name: 'Requests Per Second (Bypassed)',
+            data: data,
+            color: '#96373f', 
+            lineColor: '#B8526C',   
+            animation: false,
+          }],
+          legend: {
+            itemStyle: {
+              color: '#FFFFFF'
+            }
+          },
+          credits: {
+            enabled: false,
+          }
+
+        });
+      };
+    </script>
+
+  </body>
+</html>
