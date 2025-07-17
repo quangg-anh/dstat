@@ -1,306 +1,594 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.3.0/css/all.min.css">
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Layer4 Stats - LotusCount</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-    <title>Layer4 - DSTAT</title>
-    <style>
-      html,
-      body {
-        height: 100%;
-        margin: 0;
-        background-color: #191919;
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%);
+      color: #ffffff;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    /* Background Pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255, 107, 180, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(64, 224, 208, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 70%, rgba(138, 43, 226, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      padding: 20px 15px 15px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    /* Top Bar with User Info */
+    .top-bar {
+      width: 100%;
+      max-width: 1200px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 10px 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .top-bar .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #40e0d0, #8a2be2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .top-bar .user-info {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar .user-info p {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .top-bar .user-info span {
+      font-size: 0.8rem;
+      color: #a0a0a0;
+      margin-top: 2px;
+    }
+
+    .top-bar .sent-by {
+      font-size: 0.8rem;
+      color: #b0b0b0;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    /* Stats Cards */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.1));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-icon {
+      width: 45px;
+      height: 45px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .card:nth-child(1) .card-icon {
+      background: linear-gradient(135deg, #ff6bb3, #ff4081);
+      color: #ffffff;
+    }
+
+    .card:nth-child(2) .card-icon {
+      background: linear-gradient(135deg, #40e0d0, #00bcd4);
+      color: #ffffff;
+    }
+
+    .card:nth-child(3) .card-icon {
+      background: linear-gradient(135deg, #8a2be2, #9c27b0);
+      color: #ffffff;
+    }
+
+    .card h3 {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #b0b0b0;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 2;
+    }
+
+    .card p {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #ffffff;
+      position: relative;
+      z-index: 2;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .card:nth-child(1) p { animation-delay: 0.1s; }
+    .card:nth-child(2) p { animation-delay: 0.2s; }
+    .card:nth-child(3) p { animation-delay: 0.3s; }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Chart Container */
+    .chart-container {
+      width: 100%;
+      max-width: 1200px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.05));
+      pointer-events: none;
+    }
+
+    #chart {
+      width: 100%;
+      height: 350px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Loading Animation */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #ff6bb3;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px 10px 10px;
+        gap: 15px;
       }
 
-      body {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      .top-bar {
         flex-direction: column;
+        align-items: flex-start;
+        padding: 10px;
+        margin-bottom: 15px;
+      }
+      .top-bar .avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+      }
+      .top-bar .user-info {
+        margin-top: 10px;
+      }
+      .top-bar .user-info p {
+        font-size: 0.9rem;
+      }
+      .top-bar .user-info span {
+        font-size: 0.75rem;
+      }
+      .top-bar .sent-by {
+        width: 100%;
+        text-align: left;
+        margin-top: 10px;
+        font-size: 0.75rem;
       }
 
-      body > div {
-        width: 100%;
+      .stats {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+
+      .card {
+        padding: 15px;
+      }
+
+      .card-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        margin-bottom: 8px;
+      }
+
+      .card h3 {
+        font-size: 0.75rem;
+      }
+
+      .card p {
+        font-size: 1.5rem;
+      }
+
+      .chart-container {
+        padding: 10px;
       }
 
       #chart {
-        width: 100%;
-        margin: auto;
+        height: 250px;
       }
+    }
 
-      #info {
-        margin-top: 2em;
-        text-align: center;
-        font-family: Arial, Helvetica, sans-serif;
-      }
+    /* Smooth Scrolling */
+    html {
+      scroll-behavior: smooth;
+    }
 
-      #chart-container {
-        width: 80%;
-        margin: 2em auto;
-        padding: 1em;
-        background-color: #212121; 
-        border-top: 3px solid #FFFFFF; 
-        border-radius: 3px; 
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
 
-      }
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+    }
 
-      #container-wrapper {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-      }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #ff6bb3, #40e0d0);
+      border-radius: 4px;
+    }
 
-      #top-container {
-          display: flex;
-          width: 80%; 
-          justify-content: space-between;
-          margin-bottom: 20px; 
-      }
-
-      .side-container span, #middle-container span {
-          position: absolute;
-          bottom: 17px; 
-          width: 100%;
-          text-align: center;
-          font-weight: bold; 
-          color: #FFFFFF; 
-          font-size: 20px;
-          font-family: sans-serif;
-      }
-
-       #middle-container {
-          position: relative; 
-          width: calc((100% - 100px) / 3);
-          background-color: #212121;
-          height: 115px;
-          display: flex;
-          align-items: flex-end; 
-          justify-content: center;
-      }
-      .side-container {
-          position: relative;
-          width: calc((100% - 160px) / 3);
-          background-color: #212121;
-          height: 115px;
-          display: flex;
-          align-items: center; 
-          justify-content: flex-start; 
-          border-left: 3px solid #FFFFFF;
-      }
-
-      .side-container i {
-          color: #FFFFFF; 
-          margin-left: 28px; 
-          margin-right: 5px; 
-          font-size: 38px; 
-          position: relative; 
-          top: -15px; 
-      }
-
-      .side-container .data {
-        font-size: 20px; 
-        color: #FFFFFF; 
-        font-family: sans-serif; 
-        font-weight: bold; 
-        position: absolute; 
-        right: 20px; 
-        top: 36px; 
-        white-space: nowrap;
-        text-align: right;
-
-      }
-
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, #ff4081, #00bcd4);
+    }
   </style>
-  </head>
+</head>
 
-  <body>
-    <div>
-      <h2 id="info"></h2>
-      <div id="container-wrapper">
-        <div id="top-container">
-          <div class="side-container" id="left-container">
-            <i class="fas fa-chart-area"></i>
-            <span class="data" id="avg-data">Loading...</span>
-            <span>Average Bandwidth</span>
-          </div>
-
-          <div class="side-container" id="center-container">
-            <i class="fas fa-chart-line"></i>
-            <span class="data" id="peak-data">Loading...</span>
-            <span>Peak Bandwidth</span>
-          </div>
-
-          <div class="side-container" id="right-container">
-            <i class="fa-solid fa-dice-d20"></i>
-            <span class="data" id="total-data">Loading...</span>
-            <span>Overall Bandwidth</span>
-          </div>
-        </div>
-
-        <div id="chart-container">
-          <div id="chart"></div>
-        </div>
+<body>
+  <div class="container">
+    <div class="top-bar">
+      <div class="avatar">
+        <i class="fas fa-user-circle"></i>
       </div>
-
+      <div class="user-info">
+        <p><span id="username-display">YourUsername</span> <span id="user-id">#12345</span></p>
+        <span>Sent by: <span id="sender-name">LotusCount Admin</span></span>
+      </div>
+      <div class="sent-by">
+      </div>
     </div>
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/exporting.js"></script>
-    <script>
-      window.onload = () => {
-        let info = document.getElementById("info");
-        const queryParams = new URLSearchParams(window.location.search);
-        const dataString = queryParams.get('data');
-        const user = queryParams.get('user'); 
-        let data = [];
-        if (dataString) {
-          try {
-            data = JSON.parse(dataString);
-          } catch(e) {
-            console.error('Error parsing data query to array', e);
-          }
+
+    <div class="stats">
+      <div class="card">
+        <div class="card-icon">
+          <i class="fas fa-chart-area"></i>
+        </div>
+        <h3>Average Bandwidth</h3>
+        <p id="avg-data"><span class="loading"></span></p>
+      </div>
+      <div class="card">
+        <div class="card-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <h3>Peak Bandwidth</h3>
+        <p id="peak-data"><span class="loading"></span></p>
+      </div>
+      <div class="card">
+        <div class="card-icon">
+          <i class="fa-solid fa-dice-d20"></i>
+        </div>
+        <h3>Overall Bandwidth</h3>
+        <p id="total-data"><span class="loading"></span></p>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <div id="chart"></div>
+    </div>
+  </div>
+
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/modules/exporting.js"></script>
+  <script>
+    window.chartRendered = false;
+
+    // Number formatting with animations
+    const animateNumber = (element, targetValue, duration = 1000, isBandwidthTotal = false) => {
+      const start = 0;
+      const increment = targetValue / (duration / 16);
+      let current = start;
+      
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= targetValue) {
+          current = targetValue;
+          clearInterval(timer);
         }
-
-        const totalRequests = data.reduce((acc, curr) => acc + curr, 0);
-        const peakRequests = Math.max(...data);
-        const averageRequests = (totalRequests / data.length) || 0; 
-
-        function formatNumber(kbs) {
-            let units = ["KB/s", "MB/s", "GB/s", "TB/s"]; 
-            let index = 0; 
-
-            while (kbs >= 1024 && index < units.length - 1) {
-                kbs /= 1024;
-                index++;
+        if (isBandwidthTotal) {
+            element.textContent = formatBandwidthTotal(Math.floor(current));
+        } else {
+            element.textContent = formatBandwidth(Math.floor(current));
         }
-              return kbs.toFixed(2).replace(/\.00$/, '') + " " + units[index];
+      }, 16);
+    };
+
+    const formatBandwidth = (kbs) => {
+        let units = ["KB/s", "MB/s", "GB/s", "TB/s"]; 
+        let index = 0; 
+
+        while (kbs >= 1024 && index < units.length - 1) {
+            kbs /= 1024;
+            index++;
+        }
+        return kbs.toFixed(2).replace(/\.00$/, '') + " " + units[index];
+    };
+
+    const formatBandwidthTotal = (kbs) => {
+        let units = ["KB", "MB", "GB", "TB"]; 
+        let index = 0; 
+
+        while (kbs >= 1024 && index < units.length - 1) {
+            kbs /= 1024;
+            index++;
+        }
+        return kbs.toFixed(2).replace(/\.00$/, '') + " " + units[index];
+    };
+
+    function formatYAxisLabel(value) {
+        if (value < 1024) {
+            return value + ' KB/s';
+        } else if (value < 1024 * 1024) {
+            return (value / 1024).toFixed(2) + ' MB/s';
+        } else if (value < 1024 * 1024 * 1024) {
+            return (value / (1024 * 1024)).toFixed(2) + ' GB/s';
+        } else {
+            return (value / (1024 * 1024 * 1024)).toFixed(2) + ' TB/s';
+        }
+    }
+
+    window.onload = () => {
+      const queryParams = new URLSearchParams(window.location.search);
+      
+      // Get data from URL, default to an empty array if not present or invalid
+      let data = [];
+      const dataString = queryParams.get('data');
+      if (dataString) {
+        try {
+          data = JSON.parse(decodeURIComponent(dataString)); // Decode and parse
+          if (!Array.isArray(data)) { // Ensure it's an array
+            data = [];
           }
+        } catch (e) {
+          console.error("Error parsing data from URL:", e);
+          data = []; // Fallback to empty if parsing fails
+        }
+      }
+      
+      // Get user info from URL, with default values
+      const username = queryParams.get('username') || 'YourUsername';
+      const userId = queryParams.get('userid') || '#12345';
+      const senderName = queryParams.get('sender') || 'LotusCount Admin';
 
-          function formatNumber2(kbs) {
-              let units = ["KB", "MB", "GB", "TB"]; 
-              let index = 0; 
+      // Update user info in the HTML
+      document.getElementById('username-display').textContent = username;
+      document.getElementById('user-id').textContent = userId;
+      document.getElementById('sender-name').textContent = senderName;
 
-              while (kbs >= 1024 && index < units.length - 1) {
-                  kbs /= 1024;
-                  index++;
-          }
-              return kbs.toFixed(2).replace(/\.00$/, '') + " " + units[index];
-          }
-        
+      const totalBandwidth = data.reduce((acc, val) => acc + val, 0);
+      const peakBandwidth = data.length > 0 ? Math.max(...data) : 0; // Handle empty data case
+      const averageBandwidth = data.length > 0 ? totalBandwidth / data.length : 0; // Handle empty data case
 
-          function getYAxisUnit(data) {
-              let maxData = Math.max(...data); 
-              let units = ["KB", "MB", "GB", "TB"];
-              let unitIndex = 0;
+      // Animate numbers
+      setTimeout(() => {
+        animateNumber(document.getElementById('avg-data'), Math.round(averageBandwidth));
+        animateNumber(document.getElementById('peak-data'), peakBandwidth);
+        animateNumber(document.getElementById('total-data'), totalBandwidth, 1000, true);
+      }, 300);
 
-              while (maxData >= 1024 && unitIndex < units.length - 1) {
-                  maxData /= 1024;
-                  unitIndex++;
-              }
-
-              return units[unitIndex];
-          }
-
-          function formatYAxisLabel(value) {
-              if (value < 1024) {
-                  return value + ' Kb/s';
-              } else if (value < 1024 * 1024) {
-                  return (value / 1024).toFixed(2) + ' MB/s';
-              } else if (value < 1024 * 1024 * 1024) {
-                  return (value / (1024 * 1024)).toFixed(2) + ' GB/s';
-              } else {
-                  return (value / (1024 * 1024 * 1024)).toFixed(2) + ' TB/s';
-              }
-          }
-
-        document.getElementById('left-container').querySelector('.data').textContent = formatNumber(Math.round(averageRequests));
-        document.getElementById('center-container').querySelector('.data').textContent = formatNumber(peakRequests);
-        document.getElementById('right-container').querySelector('.data').textContent = formatNumber2(totalRequests);
-
-        let yAxisUnit = getYAxisUnit(data);
-
-        let chart = Highcharts.chart('chart', {
-          exporting: {
-            enabled: false,
+      // Create chart
+      Highcharts.chart('chart', {
+        chart: {
+          type: 'areaspline',
+          backgroundColor: 'transparent',
+          animation: {
+            duration: 1500,
+            easing: 'easeOutQuint'
           },
-          chart: {
-            type: 'area',
-            backgroundColor: '#212121',
-            animation: false,
-            events: {
-              load: function() {
+          events: {
+            load() {
+              // Watermark
+              this.renderer.text('@lotuscount', 260, 440)
+                .attr({ rotation: -38 })
+                .css({
+                  fontSize: '48px',
+                  opacity: 0.08,
+                  color: '#ffffff',
+                  fontWeight: 'bold'
+                })
+                .add();
 
-                var chart = this;
-                var width = chart.chartWidth;
-                var height = chart.chartHeight;
-
-                chart.renderer.text('@lotuscount', 240, 360)
-                  .attr({
-                    zIndex: 5,
-                    rotation: -38  
-                  })
-                  .css({
-                    color: '#FFFFFF',
-                    fontSize: '60px', 
-                    opacity: 0.4  
-                  })
-                  .add();
-              }
+              // Mark as rendered
+              window.chartRendered = true;
+              console.log('Chart rendered successfully');
             }
-
+          }
+        },
+        title: {
+          text: 'Real-time Bandwidth Graph',
+          style: {
+            color: '#ffffff',
+            fontSize: '24px',
+            fontWeight: '600'
+          }
+        },
+        xAxis: {
+          labels: {
+            style: { color: '#a0a0a0' }
           },
-          title: {
-            text: 'lotuscount Graph With Love <3',
-            style: {
-              color: '#FFFFFF', 
+          gridLineColor: 'rgba(255, 255, 255, 0.1)',
+          lineColor: 'rgba(255, 255, 255, 0.2)',
+          tickColor: 'rgba(255, 255, 255, 0.2)'
+        },
+        yAxis: {
+          title: null,
+          labels: {
+            style: { color: '#a0a0a0' },
+            formatter: function () {
+                return formatYAxisLabel(this.value);
             }
           },
-          xAxis: {
-            labels: {
-              style: {
-                color: '#FFFFFF',
-              },
-            },
-            gridLineWidth: 1,  
-            gridLineColor: '#444' 
-          },
-          yAxis: {
-              title: {
-                  text: '',
-              },
-              labels: {
-                  style: { color: '#FFFFFF' },
-                  formatter: function () {
-                      return formatYAxisLabel(this.value);
-                  }
-              },
-              gridLineWidth: 1,
-              gridLineColor: '#444'
-          },
-          series: [{
-            name: 'Incoming Bandwidth (Bypassed)',
-            data: data,
-            color: 'rgba(102, 158, 84, 0.2)',
-            lineColor: '#61C478',   
+          gridLineColor: 'rgba(255, 255, 255, 0.1)',
+          lineColor: 'rgba(255, 255, 255, 0.2)'
+        },
+        legend: {
+          itemStyle: {
+            color: '#ffffff',
+            fontSize: '14px'
+          }
+        },
+        plotOptions: {
+          areaspline: {
+            fillOpacity: 0.3,
             lineWidth: 3,
-            step: 'left', 
-            animation: false,
-          }],
-          legend: {
-            itemStyle: {
-              color: '#FFFFFF'
+            marker: {
+              enabled: true,
+              radius: 4,
+              fillColor: '#ffffff',
+              lineColor: '#61C478', /* Changed to match L4 line color */
+              lineWidth: 2
             }
-          },
-          credits: {
-            enabled: false,
           }
-
-        });
-      };
-    </script>
-
-  </body>
+        },
+        series: [{
+          name: 'Bandwidth/sec',
+          data: data,
+          color: '#61C478', /* Changed to match L4 line color */
+          fillColor: {
+            linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+            stops: [
+              [0, 'rgba(97, 196, 120, 0.8)'], /* Adjusted to L4 color */
+              [1, 'rgba(97, 196, 120, 0.1)'] /* Adjusted to L4 color */
+            ]
+          }
+        }],
+        credits: { enabled: false },
+        exporting: { enabled: false },
+        tooltip: {
+          backgroundColor: 'rgba(30, 30, 30, 0.95)',
+          borderColor: 'rgba(97, 196, 120, 0.5)', /* Adjusted to L4 color */
+          borderWidth: 1,
+          borderRadius: 8,
+          style: {
+            color: '#ffffff',
+            fontSize: '14px'
+          }
+        }
+      });
+    };
+  </script>
+</body>
 </html>
