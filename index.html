@@ -1,136 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Layer7 Stats - LotusCount</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <title>Layer7 - DSTAT</title>
   <style>
-    html,
-    body {
-      height: 100%;
+    * {
+      box-sizing: border-box;
       margin: 0;
-      background-color: #191919;
+      padding: 0;
     }
 
-    body {
+    html, body {
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: #fff;
+    }
+
+    .container {
+      padding: 40px 20px;
       display: flex;
-      align-items: center;
-      justify-content: center;
       flex-direction: column;
+      align-items: center;
+      gap: 40px;
     }
 
-    body > div {
+    .stats {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
       width: 100%;
+      max-width: 1200px;
+    }
+
+    .card {
+      flex: 1 1 280px;
+      background-color: #1e1e1e;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .card i {
+      font-size: 40px;
+      margin-bottom: 16px;
+      color: #f06292;
+    }
+
+    .card h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #ccc;
+    }
+
+    .card p {
+      font-size: 28px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .chart-container {
+      width: 100%;
+      max-width: 1200px;
+      background-color: #1e1e1e;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
     #chart {
       width: 100%;
-      margin: auto;
-    }
-
-    #info {
-      margin-top: 2em;
-      text-align: center;
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
-    #chart-container {
-      width: 80%;
-      margin: 2em auto;
-      padding: 1em;
-      background-color: #212121;
-      border-top: 3px solid #FFFFFF;
-      border-radius: 3px;
-    }
-
-    #container-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #top-container {
-      display: flex;
-      width: 80%;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      gap: 20px;
-    }
-
-    .side-container {
-      position: relative;
-      flex: 1;
-      background-color: #212121;
-      height: 115px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      border-left: 3px solid #FFFFFF;
-      padding-left: 28px;
-    }
-
-    .side-container i {
-      color: #FFFFFF;
-      margin-right: 10px;
-      font-size: 38px;
-      position: relative;
-      top: -15px;
-    }
-
-    .side-container .data {
-      font-size: 26px;
-      color: #FFFFFF;
-      font-family: sans-serif;
-      font-weight: bold;
-      position: absolute;
-      right: 24px;
-      top: 28px;
-      white-space: nowrap;
-      text-align: right;
-    }
-
-    .side-container span:last-of-type {
-      position: absolute;
-      bottom: 17px;
-      width: 100%;
-      text-align: center;
-      font-weight: bold;
-      color: #FFFFFF;
-      font-size: 20px;
-      font-family: sans-serif;
+      height: 500px;
     }
   </style>
 </head>
 
 <body>
-  <div>
-    <h2 id="info"></h2>
-    <div id="container-wrapper">
-      <div id="top-container">
-        <div class="side-container" id="left-container">
-          <i class="fas fa-chart-area"></i>
-          <span class="data" id="avg-data">Loading...</span>
-          <span>Average Requests</span>
-        </div>
-
-        <div class="side-container" id="center-container">
-          <i class="fas fa-chart-line"></i>
-          <span class="data" id="peak-data">Loading...</span>
-          <span>Peak Requests</span>
-        </div>
-
-        <div class="side-container" id="right-container">
-          <i class="fa-solid fa-dice-d20"></i>
-          <span class="data" id="total-data">Loading...</span>
-          <span>Overall Requests</span>
-        </div>
+  <div class="container">
+    <div class="stats">
+      <div class="card">
+        <i class="fas fa-chart-area"></i>
+        <h3>Average Requests</h3>
+        <p id="avg-data">Loading...</p>
       </div>
-
-      <div id="chart-container">
-        <div id="chart"></div>
+      <div class="card">
+        <i class="fas fa-chart-line"></i>
+        <h3>Peak Requests</h3>
+        <p id="peak-data">Loading...</p>
       </div>
+      <div class="card">
+        <i class="fa-solid fa-dice-d20"></i>
+        <h3>Overall Requests</h3>
+        <p id="total-data">Loading...</p>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <div id="chart"></div>
     </div>
   </div>
 
@@ -138,84 +109,62 @@
   <script src="https://code.highcharts.com/modules/exporting.js"></script>
   <script>
     window.onload = () => {
-      let info = document.getElementById("info");
       const queryParams = new URLSearchParams(window.location.search);
       const dataString = queryParams.get('data');
-      const user = queryParams.get('user');
-      let data = [];
-      if (dataString) {
-        try {
-          data = JSON.parse(dataString);
-        } catch (e) {
-          console.error('Error parsing data query to array', e);
-        }
-      }
+      const data = dataString ? JSON.parse(dataString) : [];
 
-      const totalRequests = data.reduce((acc, curr) => acc + curr, 0);
-      const peakRequests = Math.max(...data);
-      const averageRequests = (totalRequests / data.length) || 0;
+      const total = data.reduce((acc, val) => acc + val, 0);
+      const peak = Math.max(...data);
+      const avg = total / data.length || 0;
 
-      function formatNumber(num) {
-        if (num < 1000) return num;
-        let suffixes = ["", "k", "M", "B"];
-        let suffixIndex = 0;
-        while (num >= 1000 && suffixIndex < suffixes.length - 1) {
-          suffixIndex++;
-          num /= 1000;
-        }
-        return num.toFixed(2).replace(/\.00$/, '') + suffixes[suffixIndex];
-      }
+      const format = (num) => {
+        return num >= 1000 ? (num / 1000).toFixed(2).replace(/\.00$/, '') + 'k' : num;
+      };
 
-      document.getElementById('avg-data').textContent = formatNumber(Math.round(averageRequests));
-      document.getElementById('peak-data').textContent = formatNumber(peakRequests);
-      document.getElementById('total-data').textContent = formatNumber(totalRequests);
+      document.getElementById('avg-data').textContent = format(Math.round(avg));
+      document.getElementById('peak-data').textContent = format(peak);
+      document.getElementById('total-data').textContent = format(total);
 
       Highcharts.chart('chart', {
-        exporting: {
-          enabled: false,
-        },
         chart: {
           type: 'area',
-          backgroundColor: '#212121',
+          backgroundColor: '#1e1e1e',
           animation: false,
           events: {
-            load: function () {
-              var chart = this;
-              chart.renderer.text('@lotuscount', 240, 360)
-                .attr({ zIndex: 5, rotation: -38 })
-                .css({ color: '#FFFFFF', fontSize: '60px', opacity: 0.4 })
+            load() {
+              this.renderer.text('@lotuscount', 260, 440)
+                .attr({ rotation: -38 })
+                .css({ fontSize: '48px', opacity: 0.15, color: '#fff' })
                 .add();
             }
           }
         },
         title: {
-          text: 'lotuscount Graph With Love <3',
-          style: { color: '#FFFFFF' }
+          text: 'LotusCount L7 Activity Graph',
+          style: { color: '#fff' }
         },
         xAxis: {
-          labels: { style: { color: '#FFFFFF' } },
-          gridLineWidth: 1,
+          labels: { style: { color: '#aaa' } },
           gridLineColor: '#444'
         },
         yAxis: {
-          title: { text: '' },
-          labels: { style: { color: '#FFFFFF' } },
-          gridLineWidth: 1,
+          title: null,
+          labels: { style: { color: '#aaa' } },
           gridLineColor: '#444'
         },
-        series: [{
-          name: 'Requests Per Second (Bypassed)',
-          data: data,
-          color: '#96373f',
-          lineColor: '#B8526C',
-          animation: false,
-        }],
         legend: {
-          itemStyle: { color: '#FFFFFF' }
+          itemStyle: { color: '#fff' }
         },
-        credits: {
-          enabled: false,
-        }
+        series: [{
+          name: 'Requests/sec',
+          data: data,
+          color: '#e91e63',
+          lineColor: '#f06292',
+          fillOpacity: 0.3,
+          animation: false
+        }],
+        credits: { enabled: false },
+        exporting: { enabled: false }
       });
     };
   </script>
